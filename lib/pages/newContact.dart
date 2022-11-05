@@ -33,6 +33,7 @@ class _NewContactState extends State<NewContact> {
   bool shouldPop = true;
   String? _Myimage;
   bool buttonActivated = true;
+  bool iniatilizeNewContact = true;
 
   Future<void> _getImageCamera() async {
     await _picker.pickImage(source: ImageSource.camera).then((value) {
@@ -119,6 +120,7 @@ class _NewContactState extends State<NewContact> {
                     padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
                     child: TextButton(
                         onPressed: () {
+                          iniatilizeNewContact = false;
                           buttonActivated = true;
                           if (buttonActivated == true &&
                               nameController.text.isNotEmpty &&
@@ -224,12 +226,16 @@ class _NewContactState extends State<NewContact> {
               });
             }
           : null,
+      keyboardType: c == telephoneController ? TextInputType.number : null,
       controller: c,
       maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.blueAccent),
-        errorText: buttonActivated && c.text.isEmpty ? null : hintText,
+        errorText:
+            iniatilizeNewContact || (!buttonActivated && c.text.isNotEmpty)
+                ? null
+                : hintText,
       ),
     );
   }
