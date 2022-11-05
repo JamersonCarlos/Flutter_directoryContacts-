@@ -73,91 +73,97 @@ class _NewContactState extends State<NewContact> {
         body: Padding(
           padding:
               const EdgeInsets.only(top: 20, left: 10, right: 10, bottom: 20),
-          child: Column(children: [
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _getImageCamera();
-                });
-              },
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  shape: BoxShape.circle,
-                  image: _Myimage != null
-                      ? DecorationImage(
-                          fit: BoxFit.fill,
-                          image: FileImage(File(_Myimage!)),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Flexible(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _getImageCamera();
+                  });
+                },
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.circle,
+                    image: _Myimage != null
+                        ? DecorationImage(
+                            fit: BoxFit.fill,
+                            image: FileImage(File(_Myimage!)),
+                          )
+                        : null,
+                  ),
+                  child: _Myimage == null
+                      ? const Icon(
+                          Icons.person,
+                          size: 120,
+                          color: Colors.white,
                         )
                       : null,
                 ),
-                child: _Myimage == null
-                    ? const Icon(
-                        Icons.person,
-                        size: 120,
-                        color: Colors.white,
-                      )
-                    : null,
               ),
             ),
-            formTextField(nameController, "Nome", "Digite seu nome!"),
+            formTextField(nameController, "Nome", "Digite seu nome!", null),
             formTextField(
-                lastnameController, "Sobrenome", "Digite seu sobrenome!"),
-            formTextField(telephoneController, "Telefone", "Seu telefone"),
+                lastnameController, "Sobrenome", "Digite seu sobrenome!", null),
+            formTextField(telephoneController, "Telefone", "Seu telefone", 11),
             const SizedBox(
               height: 10,
             ),
             Row(
               mainAxisSize: MainAxisSize.max,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 20, 8, 0),
-                  child: TextButton(
-                      onPressed: () {
-                        buttonActivated = true;
-                        if (buttonActivated == true &&
-                            nameController.text.isNotEmpty &&
-                            lastnameController.text.isNotEmpty &&
-                            telephoneController.text.isNotEmpty) {
-                          if (widget.contact == null) {
-                            widget.addContact(
-                                nameController.text,
-                                lastnameController.text,
-                                telephoneController.text,
-                                _Myimage);
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
+                    child: TextButton(
+                        onPressed: () {
+                          buttonActivated = true;
+                          if (buttonActivated == true &&
+                              nameController.text.isNotEmpty &&
+                              lastnameController.text.isNotEmpty &&
+                              telephoneController.text.isNotEmpty) {
+                            if (widget.contact == null) {
+                              widget.addContact(
+                                  nameController.text,
+                                  lastnameController.text,
+                                  telephoneController.text,
+                                  _Myimage);
+                            } else {
+                              widget.updateContact!(
+                                  nameController.text,
+                                  lastnameController.text,
+                                  telephoneController.text,
+                                  _Myimage,
+                                  widget.indexUpdateContact);
+                            }
+                            Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: ((context) =>
+                                        const HomeContactsPage())),
+                                (Route<dynamic> route) => false);
                           } else {
-                            widget.updateContact!(
-                                nameController.text,
-                                lastnameController.text,
-                                telephoneController.text,
-                                _Myimage,
-                                widget.indexUpdateContact);
+                            setState(() {
+                              buttonActivated = false;
+                            });
                           }
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: ((context) =>
-                                      const HomeContactsPage())),
-                              (Route<dynamic> route) => false);
-                        } else {
-                          buttonActivated = false;
-                        }
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Text(
-                          widget.contact != null
-                              ? "Atualizar Contato"
-                              : "Salvar",
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 17),
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
                         ),
-                      )),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(
+                            widget.contact != null
+                                ? "Atualizar Contato"
+                                : "Salvar",
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 17),
+                          ),
+                        )),
+                  ),
                 ),
               ],
             ),
@@ -208,7 +214,8 @@ class _NewContactState extends State<NewContact> {
             )));
   }
 
-  Widget formTextField(TextEditingController c, String label, String hintText) {
+  Widget formTextField(
+      TextEditingController c, String label, String hintText, int? maxLength) {
     return TextField(
       onChanged: c == nameController
           ? (value) {
@@ -218,10 +225,11 @@ class _NewContactState extends State<NewContact> {
             }
           : null,
       controller: c,
+      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.blueAccent),
-        errorText: buttonActivated && c.text.isNotEmpty ? null : hintText,
+        errorText: buttonActivated && c.text.isEmpty ? null : hintText,
       ),
     );
   }
