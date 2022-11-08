@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:projeto6_agenda_contatos/pages/newContact.dart';
+import 'package:projeto6_agenda_contatos/services/serviceContact.dart';
 import 'package:string_scanner/string_scanner.dart';
+import 'package:projeto6_agenda_contatos/models/modelContact.dart';
 
 class HomeContactsPage extends StatefulWidget {
   const HomeContactsPage({super.key});
@@ -15,16 +18,19 @@ class HomeContactsPage extends StatefulWidget {
 }
 
 class _HomeContactsPageState extends State<HomeContactsPage> {
-  List<dynamic> _contactsList = [];
-  Map<String, dynamic>? contactBackup;
+  ServiceContact contactService = ServiceContact();
+
+  //Novo
+  List<Contact> _listContact = [];
+  Contact? backupContact;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _readData().then((data) {
+    contactService.getAllContacts().then((value) {
       setState(() {
-        _contactsList = json.decode(data!);
+        _listContact = value;
       });
     });
   }
@@ -55,7 +61,7 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
           Flexible(
               child: ListView.builder(
             padding: const EdgeInsets.all(8),
-            itemCount: _contactsList.length,
+            itemCount: _listContact.length,
             itemBuilder: ((context, index) {
               return Dismissible(
                 key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
@@ -76,23 +82,26 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
                   ),
                 ),
                 onDismissed: (direction) {
-                  contactBackup = _contactsList[index];
+                  backupContact = _listContact[index];
                   setState(() {
-                    _contactsList.removeAt(index);
-                    _saveData();
+                    setState(() async {
+                      contactService.deleteContact(_listContact[index].id!);
+                      _listContact = await contactService.getAllContacts();
+                    });
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       duration: const Duration(seconds: 2),
                       backgroundColor: Colors.black54,
                       content: Text(
-                          "O contato de ${contactBackup!["name"]} foi removido com sucesso"),
+                          "O contato de ${_listContact[index].name} foi removido com sucesso"),
                       action: SnackBarAction(
                         label: "Desfazer",
                         onPressed: () {
-                          setState(() {
-                            _contactsList.insert(index, contactBackup);
-                            _saveData();
+                          setState(() async {
+                            contactService.saveContact(backupContact!);
+                            _listContact =
+                                await contactService.getAllContacts();
                           });
                         },
                       ),
@@ -120,50 +129,25 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
     );
   }
 
-  //Funções de manipulação de dados
-  Future<File> _getFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/data.json');
-  }
-
-  Future<File> _saveData() async {
-    String data = json.encode(_contactsList);
-    final file = await _getFile();
-    return file.writeAsString(data);
-  }
-
-  Future<String?> _readData() async {
-    try {
-      final file = await _getFile();
-      return file.readAsString();
-    } catch (e) {
-      return null;
-    }
-  }
-
   void updateContact(
-      String name, String lastname, String tel, String? pathphoto, int index) {
-    Map<String, dynamic> newContact = {};
-    newContact["name"] = name;
-    newContact["lastname"] = lastname;
-    newContact["tel"] = tel;
-    newContact["photo"] = pathphoto;
-    setState(() {
-      _contactsList[index] = newContact;
-      _saveData();
+      String name, String email, String tel, String? pathphoto, int index) {
+    setState(() async {
+      await contactService.updateContact(Contact(
+          id: _listContact[index].id,
+          name: name,
+          email: email,
+          phone: tel,
+          img: pathphoto));
+      _listContact = await contactService.getAllContacts();
     });
   }
 
   void _addContact(
-      String name, String lastname, String tel, String? pathphoto) {
-    Map<String, dynamic> newContact = {};
-    newContact["name"] = name;
-    newContact["lastname"] = lastname;
-    newContact["tel"] = tel;
-    newContact["photo"] = pathphoto;
-    setState(() {
-      _contactsList.add(newContact);
-      _saveData();
+      String name, String email, String tel, String? pathphoto) async {
+    contactService.saveContact(
+        Contact(name: name, email: email, phone: tel, img: pathphoto));
+    setState(() async {
+      _listContact = await contactService.getAllContacts();
     });
   }
 
@@ -177,7 +161,7 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
                       indexUpdateContact: index,
                       updateContact: updateContact,
                       addContact: _addContact,
-                      contact: _contactsList[index],
+                      contact: _listContact[index],
                     )));
       },
       child: Padding(
@@ -189,7 +173,7 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
               borderRadius: BorderRadius.circular(4)),
           child: Row(
             children: [
-              _contactsList[index]["photo"] == null
+              _listContact[index].img == null
                   ? Container(
                       height: 50,
                       width: 50,
@@ -209,15 +193,14 @@ class _HomeContactsPageState extends State<HomeContactsPage> {
                           shape: BoxShape.circle,
                           color: Colors.grey,
                           image: DecorationImage(
-                              image: FileImage(
-                                  File(_contactsList[index]["photo"])),
+                              image: FileImage(File(_listContact[index].img!)),
                               fit: BoxFit.fill)),
                     ),
               const SizedBox(
                 width: 20,
               ),
               Text(
-                _contactsList[index]["name"],
+                _listContact[index].name!,
                 style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w700,
