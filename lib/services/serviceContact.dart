@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:projeto6_agenda_contatos/models/modelContact.dart';
 
 //Columns -> id || name || email || phone || img path
 final String contactTable = "contactTable";
@@ -34,5 +35,13 @@ class ServiceContact {
       await db.execute(
           "CREATE TABLE $contactTable($idColumn INTEGER PRIMARY KEY AUTOINCREMENT, $nameColumn TEXT, $emailColumn TEXT, $phoneColumn TEXT, $imgColumn TEXT,)");
     }));
+  }
+
+  Future<Contact> saveContact(Contact contact) async {
+    Database dbContact = await db;
+
+    //Save contact
+    contact.id = await dbContact.insert(contactTable, contact.toMap());
+    return contact;
   }
 }
