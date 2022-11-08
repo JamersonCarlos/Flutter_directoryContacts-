@@ -44,4 +44,48 @@ class ServiceContact {
     contact.id = await dbContact.insert(contactTable, contact.toMap());
     return contact;
   }
+
+  Future<Contact?> getContact(int idContact) async {
+    Database dbContact = await db;
+
+    //Get contact
+    List<Map> maps = await dbContact.query(contactTable,
+        columns: [idColumn, nameColumn, emailColumn, phoneColumn, imgColumn],
+        where: "$idColumn = ?",
+        whereArgs: [idContact]);
+
+    if (maps.length > 0) {
+      return Contact.fromMap(maps.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<int> deleteContact(int idContact) async {
+    Database dbContact = await db;
+
+    //Delete contact
+    return await dbContact
+        .delete(contactTable, where: "$idColumn = ?", whereArgs: [idContact]);
+  }
+
+  Future<int> updateContact(Contact contact) async {
+    Database dbContact = await db;
+
+    //updateContact
+    return await dbContact.update(contactTable, contact.toMap(),
+        where: "$idColumn = ?", whereArgs: [contact.id]);
+  }
+
+  Future<List<Contact>> getAllContacts() async {
+    Database dbContact = await db;
+
+    //Return list of contacts
+    List mapList = await dbContact.rawQuery("SELECT * FROM $contactTable");
+    List<Contact> contactsMap = [];
+    for (Map m in mapList) {
+      contactsMap.add(Contact.fromMap(m));
+    }
+    return contactsMap;
+  }
 }
