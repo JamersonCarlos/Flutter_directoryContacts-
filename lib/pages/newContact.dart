@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:projeto6_agenda_contatos/pages/homeContactsPage.dart';
+import 'package:projeto6_agenda_contatos/models/modelContact.dart';
 
 class NewContact extends StatefulWidget {
   NewContact(
@@ -18,7 +19,7 @@ class NewContact extends StatefulWidget {
 
   final Function? updateContact;
   final Function addContact;
-  Map<String, dynamic>? contact;
+  Contact? contact;
 
   @override
   State<NewContact> createState() => _NewContactState();
@@ -26,7 +27,7 @@ class NewContact extends StatefulWidget {
 
 class _NewContactState extends State<NewContact> {
   TextEditingController nameController = TextEditingController();
-  TextEditingController lastnameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController telephoneController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
@@ -48,10 +49,10 @@ class _NewContactState extends State<NewContact> {
     // TODO: implement initState
     super.initState();
     if (widget.contact != null) {
-      nameController.text = widget.contact!["name"];
-      lastnameController.text = widget.contact!["lastname"];
-      telephoneController.text = widget.contact!["tel"];
-      _Myimage = widget.contact!["photo"];
+      nameController.text = widget.contact!.name!;
+      emailController.text = widget.contact!.email!;
+      telephoneController.text = widget.contact!.phone!;
+      _Myimage = widget.contact!.img;
     }
   }
 
@@ -107,7 +108,7 @@ class _NewContactState extends State<NewContact> {
             ),
             formTextField(nameController, "Nome", "Digite seu nome!", null),
             formTextField(
-                lastnameController, "Sobrenome", "Digite seu sobrenome!", null),
+                emailController, "Sobrenome", "Digite seu email!", null),
             formTextField(telephoneController, "Telefone", "Seu telefone", 11),
             const SizedBox(
               height: 10,
@@ -124,18 +125,18 @@ class _NewContactState extends State<NewContact> {
                           buttonActivated = true;
                           if (buttonActivated == true &&
                               nameController.text.isNotEmpty &&
-                              lastnameController.text.isNotEmpty &&
+                              emailController.text.isNotEmpty &&
                               telephoneController.text.isNotEmpty) {
                             if (widget.contact == null) {
                               widget.addContact(
                                   nameController.text,
-                                  lastnameController.text,
+                                  emailController.text,
                                   telephoneController.text,
                                   _Myimage);
                             } else {
                               widget.updateContact!(
                                   nameController.text,
-                                  lastnameController.text,
+                                  emailController.text,
                                   telephoneController.text,
                                   _Myimage,
                                   widget.indexUpdateContact);
